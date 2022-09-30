@@ -129,14 +129,9 @@ namespace JotronZones
                 this.radius = radius;
                 if (radius < 0) throw new ArgumentException("A circle with a negative radius is invalid");
             }
-            public override bool IsInTheArea((int x, int y) coords)
-            {
-                if (Math.Pow(coords.x - this.coords.x, 2) +
-                    Math.Pow(coords.y - this.coords.x, 2) <= Math.Pow(radius, 2))
-                    return true;
-                else
-                    return false;
-            }
+            public override bool IsInTheArea((int x, int y) coords) => Math.Pow(coords.x - this.coords.x, 2) +
+                    Math.Pow(coords.y - this.coords.x, 2) <= Math.Pow(radius, 2);
+
 
         }
         private class Rectangle : Shape
