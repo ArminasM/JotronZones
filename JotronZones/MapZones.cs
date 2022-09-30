@@ -1,5 +1,4 @@
-﻿
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace JotronZones
 {
@@ -13,7 +12,7 @@ namespace JotronZones
 
         public static int Main(string[] args)
         {
-            if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Please supply correct data format");
+            if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Data file extension is not supported");
 
             string[] lines = File.ReadAllLines(args[0]);
             lines = lines.Select(line => Regex.Replace(line, @"\s+", " ").Trim()).ToArray();
@@ -22,10 +21,9 @@ namespace JotronZones
             foreach (string line in lines)
             {
                 string[] lineSplit = line.Split(' ');
-                if (lineSplit.Length != 5) throw new ArgumentException($"Line {line} does not meet the format");
+                if (lineSplit.Length != 5) throw new InvalidDataException($"Map zone {line} does not meet the input format");
 
                 Shape zone = NewShape(lineSplit);
-
                 string type = lineSplit[0];
 
                 switch (type)
@@ -39,7 +37,7 @@ namespace JotronZones
                     case nameof(ZoneTypes.safe):
                         zones.Insert(0, (zone, ZoneTypes.safe));
                         break;
-                    default: throw new ArgumentException("Invalid type provided");
+                    default: throw new ArgumentException($"Invalid zone type provided {type}");
                 }
             }
 
@@ -61,6 +59,7 @@ namespace JotronZones
             string shape = line[1];
             string coords1 = line[3];
             var match = Regex.Match(coords1, @"\((-?\d+),(-?\d+)\)");
+            if (!match.Success) throw new InvalidDataException("Coordinates given have the wrong format");
             int x1 = ParseCordinates(match).x;
             int y1 = ParseCordinates(match).y;
 
@@ -69,6 +68,8 @@ namespace JotronZones
                 string coords2 = line[4];
                 
                 var match2 = Regex.Match(coords2, @"\((-?\d+),(-?\d+)\)");
+                if (!match2.Success) throw new InvalidDataException("Coordinates given have the wrong format");
+
                 int x2 = ParseCordinates(match2).x;
                 int y2 = ParseCordinates(match2).y;
 
@@ -90,7 +91,7 @@ namespace JotronZones
             var match = Regex.Match(input, @"\((-?\d+),(-?\d+)\)");
             string id = Regex.Match(input, @"^[a-zA-Z0-9]*").Value;
 
-            if (!match.Success) return "Wrong input, try again";
+            if (!match.Success) return "Coordinates given are the wrong format";
 
             int x = ParseCordinates(match).x;
             int y = ParseCordinates(match).y;
@@ -111,12 +112,10 @@ namespace JotronZones
                     default: break;
                 }
             }
-            return "nothing found";
+            return "";
         }
         private static (int x, int y) ParseCordinates(Match match) => (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
-
         #endregion
-
 
         abstract class Shape {
             public abstract bool IsInTheArea((int x,int y) coords);
@@ -130,11 +129,10 @@ namespace JotronZones
             {
                 this.coords = coords;
                 this.radius = radius;
-                if (radius < 0) throw new ArgumentException("A circle with a negative radius is invalid");
+                if (radius < 0) throw new ArgumentException("A circle zone with a negative radius is invalid");
             }
             public override bool IsInTheArea((int x, int y) coords) => Math.Pow(coords.x - this.coords.x, 2) +
                     Math.Pow(coords.y - this.coords.x, 2) <= Math.Pow(radius, 2);
-
 
         }
         private class Rectangle : Shape
@@ -146,16 +144,10 @@ namespace JotronZones
             {
                 this.coords1 = coords1;
                 this.coords2 = coords2;
-                if (coords2.x < coords1.x || coords2.y < coords1.y) throw new ArgumentException("Invalid coordinates of a rectangle");
+                if (coords2.x < coords1.x || coords2.y < coords1.y) throw new ArgumentException($"Invalid coordinates of a rectangle zone");
             }
             public override bool IsInTheArea((int x, int y) coords) => coords.x >= coords1.x && coords.x <= coords2.x && coords.y >= coords1.y && coords.y <= coords2.y;
 
         }
     }
-
 }
-
-
-
-
-

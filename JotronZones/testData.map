@@ -1,3 +1,4 @@
 ﻿warn rectangle - (0,0) (10,10)
-fire circle - (5,5) 3
+fire circle - (5,  5) 3
 safe rectangle - (0,6) (10,8)
+safe circle - (5,5) 3
