@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "JotronZones": {
+      "commandName": "Project",
+      "commandLineArgs": "./testData.map",
+      "workingDirectory": "C:\\Users\\X\\Desktop\\interview\\JotronZones\\JotronZones"
+    }
+  }
+}
