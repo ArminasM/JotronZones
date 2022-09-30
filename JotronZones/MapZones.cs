@@ -2,20 +2,20 @@
 
 namespace JotronZones
 {
-    class MapZones
+    public class MapZones
     {
         enum ZoneTypes {
             warn,
             safe,
             fire
         }
-
+        private static List<(Shape shape, ZoneTypes type)> zones = new();
         public static int Main(string[] args)
         {
             if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Data file extension is not supported");
 
             string[] lines = File.ReadAllLines(args[0]);
-            List<(Shape shape, ZoneTypes type)> zones = PopulateMap(lines);
+            zones = PopulateMap(lines);
 
             //Map generation is finished, time to listen
             Console.WriteLine("Awaiting for input. Type \"exit\" to quit");
@@ -23,7 +23,7 @@ namespace JotronZones
             {
                 string? input = Console.ReadLine();
                 if (input == "exit") break;
-                Console.Write(GetResponse((input ?? ""), zones));
+                Console.Write(GetResponse((input ?? "")));
             }
 
             return 0;
@@ -84,7 +84,7 @@ namespace JotronZones
             }
             else throw new ArgumentException($"Such shape does not exist: {shape}");
         }
-        private static string GetResponse(string input, List<(Shape shape, ZoneTypes zone)> zones)
+        private static string GetResponse(string input)
         {
             bool flag;
             string output = "";
@@ -110,7 +110,7 @@ namespace JotronZones
 
                 foreach (var area in zones)
                 {
-                    switch (area.zone)
+                    switch (area.type)
                     {
                         case ZoneTypes.warn:
                             if (area.shape.IsInTheArea((x, y))) {
