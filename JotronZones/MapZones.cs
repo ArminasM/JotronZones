@@ -15,9 +15,23 @@ namespace JotronZones
             if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Data file extension is not supported");
 
             string[] lines = File.ReadAllLines(args[0]);
-            lines = lines.Select(line => Regex.Replace(line, @"\s+", " ").Trim()).ToArray();
-            List<(Shape shape, ZoneTypes type)> zones = new();
+            List<(Shape shape, ZoneTypes type)> zones = PopulateMap(lines);
 
+            //Map generation is finished, time to listen
+            Console.WriteLine("Awaiting for input. Type \"exit\" to quit");
+            while (true)
+            {
+                string? input = Console.ReadLine();
+                if (input == "exit") break;
+                Console.Write(GetResponse((input ?? ""), zones));
+            }
+
+            return 0;
+        }
+        private static List<(Shape shape, ZoneTypes type)> PopulateMap(string[] lines)
+        {
+            List<(Shape shape, ZoneTypes type)> zones = new();
+            lines = lines.Select(line => Regex.Replace(line, @"\s+", " ").Trim()).ToArray();
             foreach (string line in lines)
             {
                 string[] lineSplit = line.Split(' ');
@@ -40,26 +54,14 @@ namespace JotronZones
                     default: throw new ArgumentException($"Invalid zone type provided {type}");
                 }
             }
-
-            //Map generation is finished, time to listen
-            Console.WriteLine("Awaiting for input. Type \"exit\" to quit");
-            while (true)
-            {
-                string? input = Console.ReadLine();
-                if (input == "exit") break;
-                Console.WriteLine(GetResponse((input ?? ""), zones));
-            }
-
-            return 0;
+            return zones;
         }
-
-        #region HelperFunctions
         private static Shape NewShape(string[] line)
         {
             string shape = line[1];
             string coords1 = line[3];
             var match = Regex.Match(coords1, @"\((-?\d+),(-?\d+)\)");
-            if (!match.Success) throw new InvalidDataException("Coordinates given have the wrong format");
+            if (!match.Success) throw new InvalidDataException($"Coordinates given have the wrong format");
             int x1 = ParseCordinates(match).x;
             int y1 = ParseCordinates(match).y;
 
@@ -77,43 +79,66 @@ namespace JotronZones
             }
             else if (typeof(Circle).Name.ToLower() == shape)
             {
-                string radius = line[4];
-                int r = int.Parse(radius);
-                return new Circle((x1, y1), r);
+                if(int.TryParse(line[4], out int radius)) return new Circle((x1, y1), radius);
+                throw new InvalidDataException($"Inlavid radius of a circle was given \"{line[4]}\"");
             }
-            else throw new ArgumentException();
+            else throw new ArgumentException($"Such shape does not exist: {shape}");
         }
         private static string GetResponse(string input, List<(Shape shape, ZoneTypes zone)> zones)
         {
+            bool flag;
+            string output = "";
             if (string.IsNullOrEmpty(input)) return "";
-            input = Regex.Replace(input, @"\s+", "").Trim();
+            string planesList = Regex.Replace(input, @"\s+", " ");
+            string[] planes = planesList.Split(' ');
+            
 
-            var match = Regex.Match(input, @"\((-?\d+),(-?\d+)\)");
-            string id = Regex.Match(input, @"^[a-zA-Z0-9]*").Value;
-
-            if (!match.Success) return "Coordinates given are the wrong format";
-
-            int x = ParseCordinates(match).x;
-            int y = ParseCordinates(match).y;
-
-            foreach (var area in zones)
+            foreach (string plane in planes)
             {
-                switch (area.zone)
+                flag = false;
+                var match = Regex.Match(plane, @"\((-?\d+),(-?\d+)\)");
+                string id;
+                if (plane.IndexOf("(") != -1)
                 {
-                    case ZoneTypes.warn:
-                        if(area.shape.IsInTheArea((x,y))) return $"Warning {id}";
-                        break;
-                    case ZoneTypes.fire:
-                        if (area.shape.IsInTheArea((x, y))) return $"Shooting {id} at ({x},{y})";
-                        break;
-                    case ZoneTypes.safe:
-                        if (area.shape.IsInTheArea((x, y))) return "";
-                        break;
-                    default: break;
+                    id = plane[0..plane.IndexOf("(", 0)];
+                }
+                else return "One of the planes format was incorrect\n";
+                if (string.IsNullOrEmpty(id)) return "We cannot act without a plane ID\n";
+                if (!match.Success) return "Coordinates given are the wrong format\n";
+                int x = ParseCordinates(match).x;
+                int y = ParseCordinates(match).y;
+
+                foreach (var area in zones)
+                {
+                    switch (area.zone)
+                    {
+                        case ZoneTypes.warn:
+                            if (area.shape.IsInTheArea((x, y))) {
+                                output += $"Warning {id}\n";
+                                flag = true;
+                            } 
+                            break;
+                        case ZoneTypes.fire:
+                            if (area.shape.IsInTheArea((x, y))) {
+                                output += $"Shooting {id} at ({x},{y})\n";
+                                flag = true;
+                            }
+                            break;
+                        case ZoneTypes.safe:
+                            if (area.shape.IsInTheArea((x, y))) {
+                                output += "\n";
+                                flag = true;
+                            }
+                            break;
+                        default: break;
+                    }
+                    if (flag) break;
                 }
             }
-            return "";
+            return output;
         }
+
+        #region HelperFunctions
         private static (int x, int y) ParseCordinates(Match match) => (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
         #endregion
 
