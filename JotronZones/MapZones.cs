@@ -63,6 +63,7 @@ namespace JotronZones
             var match = Regex.Match(coords1, @"\((-?\d+),(-?\d+)\)");
             int x1 = ParseCordinates(match).x;
             int y1 = ParseCordinates(match).y;
+
             if (typeof(Rectangle).Name.ToLower() == shape)
             {
                 string coords2 = line[4];
@@ -88,6 +89,8 @@ namespace JotronZones
 
             var match = Regex.Match(input, @"\((-?\d+),(-?\d+)\)");
             string id = Regex.Match(input, @"^[a-zA-Z0-9]*").Value;
+
+            if (!match.Success) return "Wrong input, try again";
 
             int x = ParseCordinates(match).x;
             int y = ParseCordinates(match).y;
