@@ -12,6 +12,7 @@ namespace JotronZones
         private static List<(Shape shape, ZoneTypes type)> zones = new();
         public static int Main(string[] args)
         {
+            if (args.Length == 0) throw new ArgumentException("Please provide a file");
             if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Data file extension is not supported");
 
             string[] lines = File.ReadAllLines(args[0]);
