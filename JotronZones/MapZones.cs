@@ -20,7 +20,7 @@ namespace JotronZones
             if (Path.GetExtension(args[0]) != ".map") throw new InvalidDataException("Data file extension is not supported");
 
             string[] lines = File.ReadAllLines(args[0]);
-            zones = PopulateMap(lines);
+            PopulateMap(lines);
 
             //Map generation is finished, time to listen
             Console.WriteLine("Awaiting for input. Type \"exit\" to quit");
@@ -33,7 +33,7 @@ namespace JotronZones
 
             return 0;
         }
-        private static List<(Shape shape, ZoneTypes type)> PopulateMap(string[] lines)
+        private static void PopulateMap(string[] lines)
         {
             lines = lines.Select(line => Regex.Replace(line, @"\s+", " ").Trim()).ToArray();
             foreach (string line in lines)
@@ -59,7 +59,6 @@ namespace JotronZones
                 }
             }
             zones.Reverse();
-            return zones;
         }
         private static Shape NewShape(string[] line)
         {
