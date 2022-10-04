@@ -35,7 +35,6 @@ namespace JotronZones
         }
         private static List<(Shape shape, ZoneTypes type)> PopulateMap(string[] lines)
         {
-            List<(Shape shape, ZoneTypes type)> zones = new();
             lines = lines.Select(line => Regex.Replace(line, @"\s+", " ").Trim()).ToArray();
             foreach (string line in lines)
             {
@@ -48,17 +47,18 @@ namespace JotronZones
                 switch (type)
                 {
                     case nameof(ZoneTypes.warn):
-                        zones.Insert(0, (zone, ZoneTypes.warn));
+                        zones.Add((zone, ZoneTypes.warn));
                         break;
                     case nameof(ZoneTypes.fire):
-                        zones.Insert(0, (zone, ZoneTypes.fire));
+                        zones.Add((zone, ZoneTypes.fire));
                         break;
                     case nameof(ZoneTypes.safe):
-                        zones.Insert(0, (zone, ZoneTypes.safe));
+                        zones.Add((zone, ZoneTypes.safe));
                         break;
                     default: throw new ArgumentException($"Invalid zone type provided {type}");
                 }
             }
+            zones.Reverse();
             return zones;
         }
         private static Shape NewShape(string[] line)
